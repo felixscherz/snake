@@ -130,7 +130,17 @@ class Board:
                     case Segment():
                         out.write("o")
                     case Head():
-                        out.write(">")
+                        match col.direction:
+                            case Direction.UP:
+                                out.write("^")
+                            case Direction.DOWN:
+                                out.write("v")
+                            case Direction.RIGHT:
+                                out.write(">")
+                            case Direction.LEFT:
+                                out.write("<")
+
+
             out.write("|")
             out.write("\n")
         return out.getvalue()
@@ -165,7 +175,7 @@ def main(stdscr: curses.window):
         stdscr.addstr(str(board))
         stdscr.refresh()
 
-        sleep(0.1)
+        sleep(0.4)
 
 
 
