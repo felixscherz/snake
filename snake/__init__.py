@@ -161,7 +161,7 @@ def main(stdscr: curses.window):
             case _:
                 board.tick()
 
-        stdscr.clear()
+        stdscr.erase()
         stdscr.addstr(str(board))
         stdscr.refresh()
 
