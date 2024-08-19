@@ -147,15 +147,15 @@ def main(stdscr: curses.window):
         stdscr.nodelay(True)
         key = stdscr.getch()
         match key:
-            case curses.KEY_DOWN:
+            case curses.KEY_DOWN | 106:
                 board.tick(Direction.DOWN)
-            case curses.KEY_UP:
+            case curses.KEY_UP | 107:
                 board.tick(Direction.UP)
-            case curses.KEY_LEFT:
+            case curses.KEY_LEFT | 104:
                 board.tick(Direction.LEFT)
-            case curses.KEY_RIGHT:
+            case curses.KEY_RIGHT | 108:
                 board.tick(Direction.RIGHT)
-            case 108:
+            case 32:
                 board.length += 1
                 board.tick()
             case _:
