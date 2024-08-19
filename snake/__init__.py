@@ -1,13 +1,16 @@
 from __future__ import annotations
-from time import sleep
 
-from io import StringIO
-from curses import wrapper
 import curses
+from curses import wrapper
 from enum import Enum
 from enum import auto
+from io import StringIO
+from time import sleep
 from typing import Any
 from typing import Optional
+
+
+class GameLost(Exception): ...
 
 
 class Cell: ...
@@ -73,6 +76,9 @@ class Empty(Cell):
         return self
 
 
+class Food(Cell): ...
+
+
 class Board:
     def __init__(self, width: int, height: int) -> None:
         assert width > 0
@@ -109,12 +115,15 @@ class Board:
                 next_pos = (self.head_pos[0], (self.head_pos[1] + 1) % self.width)
 
         self.head = Head(direction)
+        if isinstance(self[next_pos], Segment):
+            raise GameLost()
+
         self[next_pos] = self.head
         self[self.head_pos] = Segment(-1)
         for i in range(self.height):
             for j in range(self.width):
-                if isinstance(self[i,j], Segment):
-                    self[i,j] = self[i,j].tick(self.length)
+                if isinstance(self[i, j], Segment):
+                    self[i, j] = self[i, j].tick(self.length)
         self.head_pos = next_pos
 
     def next_pos(self, direction: Optional[Direction] = None) -> tuple[int, int]: ...
@@ -140,18 +149,16 @@ class Board:
                             case Direction.LEFT:
                                 out.write("<")
 
-
             out.write("|")
             out.write("\n")
         return out.getvalue()
-
 
 
 def main(stdscr: curses.window):
     # Clear screen
     stdscr.clear()
 
-    board = Board(10,10)
+    board = Board(10, 10)
 
     while True:
         stdscr.nodelay(True)
@@ -176,8 +183,6 @@ def main(stdscr: curses.window):
         stdscr.refresh()
 
         sleep(0.4)
-
-
 
 
 if __name__ == "__main__":
