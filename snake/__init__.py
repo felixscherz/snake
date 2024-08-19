@@ -1,7 +1,9 @@
 from __future__ import annotations
+from time import sleep
 
 from io import StringIO
 from curses import wrapper
+import curses
 from enum import Enum
 from enum import auto
 from typing import Any
@@ -91,7 +93,8 @@ class Board:
 
     def tick(self, direction: Optional[Direction] = None):
         if direction:
-            assert self.head.direction.can_switch_to(direction)
+            if not self.head.direction.can_switch_to(direction):
+                direction = self.head.direction
         else:
             direction = self.head.direction
 
@@ -134,17 +137,37 @@ class Board:
 
 
 
-def main(stdscr):
+def main(stdscr: curses.window):
     # Clear screen
     stdscr.clear()
 
-    # This raises ZeroDivisionError when i == 10.
-    for i in range(0, 10):
-        v = i - 10
-        stdscr.addstr(i, 0, "10 divided by {} is {}".format(v, 10 / v))
+    board = Board(10,10)
 
-    stdscr.refresh()
-    stdscr.getkey()
+    while True:
+        stdscr.nodelay(True)
+        key = stdscr.getch()
+        match key:
+            case curses.KEY_DOWN:
+                board.tick(Direction.DOWN)
+            case curses.KEY_UP:
+                board.tick(Direction.UP)
+            case curses.KEY_LEFT:
+                board.tick(Direction.LEFT)
+            case curses.KEY_RIGHT:
+                board.tick(Direction.RIGHT)
+            case 108:
+                board.length += 1
+                board.tick()
+            case _:
+                board.tick()
+
+        stdscr.clear()
+        stdscr.addstr(str(board))
+        stdscr.refresh()
+
+        sleep(0.1)
+
+
 
 
 if __name__ == "__main__":
