@@ -1,13 +1,18 @@
 from __future__ import annotations
 
 import curses
+import random
 from curses import wrapper
 from enum import Enum
 from enum import auto
 from io import StringIO
 from time import sleep
-from typing import Any
 from typing import Optional
+import logging 
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+logger.addHandler(logging.StreamHandler())
 
 
 class GameLost(Exception): ...
@@ -90,6 +95,7 @@ class Board:
         self.head_pos = (0, 0)
         self[self.head_pos] = self.head
         self.length = 1
+        self.food=False
 
     def __getitem__(self, slice: tuple[int, int]) -> Cell:
         return self.board[slice[0]][slice[1]]
@@ -114,9 +120,20 @@ class Board:
             case direction.RIGHT:
                 next_pos = (self.head_pos[0], (self.head_pos[1] + 1) % self.width)
 
+        x = random.randint(0, self.height - 1)
+        y = random.randint(0, self.width - 1)
+
+        if isinstance(self[x, y], Empty) and not self.food:
+            self.food = True
+            self[x, y] = Food()
+
         self.head = Head(direction)
         if isinstance(self[next_pos], Segment):
             raise GameLost()
+
+        if isinstance(self[next_pos], Food):
+            self.food = False
+            self.length += 1
 
         self[next_pos] = self.head
         self[self.head_pos] = Segment(-1)
@@ -136,6 +153,8 @@ class Board:
                 match col:
                     case Empty():
                         out.write(" ")
+                    case Food():
+                        out.write("x")
                     case Segment():
                         out.write("o")
                     case Head():
@@ -158,7 +177,7 @@ def main(stdscr: curses.window):
     # Clear screen
     stdscr.clear()
 
-    board = Board(10, 10)
+    board = Board(40, 25)
 
     while True:
         stdscr.nodelay(True)
@@ -182,7 +201,7 @@ def main(stdscr: curses.window):
         stdscr.addstr(str(board))
         stdscr.refresh()
 
-        sleep(0.4)
+        sleep(0.05)
 
 
 if __name__ == "__main__":
