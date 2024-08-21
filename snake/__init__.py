@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import argparse
 import curses
 import random
 from curses import wrapper
@@ -173,11 +174,13 @@ class Board:
         return out.getvalue()
 
 
-def main(stdscr: curses.window):
+def play(stdscr: curses.window, width:int, height:int, tick_rate:float):
     # Clear screen
     stdscr.clear()
 
-    board = Board(40, 25)
+    board = Board(width, height)
+
+    last_key = None
 
     while True:
         stdscr.nodelay(True)
@@ -197,12 +200,12 @@ def main(stdscr: curses.window):
             case _:
                 board.tick()
 
+        if key is not curses.ERR:
+            last_key = key
+
         stdscr.erase()
         stdscr.addstr(str(board))
+        stdscr.addstr(f"button pressed: {chr(last_key or 1)}")
         stdscr.refresh()
 
-        sleep(0.05)
-
-
-if __name__ == "__main__":
-    wrapper(main)
+        sleep(tick_rate)
