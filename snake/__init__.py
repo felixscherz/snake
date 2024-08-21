@@ -205,6 +205,7 @@ def play(stdscr: curses.window, width:int, height:int, tick_rate:float):
 
         stdscr.erase()
         stdscr.addstr(str(board))
+        stdscr.addstr(f"score: {board.length}\n")
         stdscr.addstr(f"button pressed: {chr(last_key or 1)}")
         stdscr.refresh()
 
