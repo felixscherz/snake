@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import argparse
 import curses
+import logging
 import random
 from curses import wrapper
 from enum import Enum
@@ -9,7 +10,6 @@ from enum import auto
 from io import StringIO
 from time import sleep
 from typing import Optional
-import logging 
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -96,7 +96,7 @@ class Board:
         self.head_pos = (0, 0)
         self[self.head_pos] = self.head
         self.length = 1
-        self.food=False
+        self.food = False
 
     def __getitem__(self, slice: tuple[int, int]) -> Cell:
         return self.board[slice[0]][slice[1]]
@@ -149,7 +149,6 @@ class Board:
     def __str__(self) -> str:
         out = StringIO()
         for row in self.board:
-            out.write("|")
             for col in row:
                 match col:
                     case Empty():
@@ -169,16 +168,18 @@ class Board:
                             case Direction.LEFT:
                                 out.write("<")
 
-            out.write("|")
             out.write("\n")
         return out.getvalue()
 
 
-def play(stdscr: curses.window, width:int, height:int, tick_rate:float):
+def play(stdscr: curses.window, width: int, height: int, tick_rate: float):
     # Clear screen
     stdscr.clear()
 
     board = Board(width, height)
+    window = curses.newwin(height + 2, width + 2, 9, 0)
+    stats = curses.newwin(8, 40)
+    window.clear()
 
     last_key = None
 
@@ -194,7 +195,14 @@ def play(stdscr: curses.window, width:int, height:int, tick_rate:float):
                 board.tick(Direction.LEFT)
             case curses.KEY_RIGHT | 108:
                 board.tick(Direction.RIGHT)
-            case 32:
+            case 43: # +
+                tick_rate += 0.1
+                board.tick()
+            case 45: # -
+                tick_rate -= 0.1
+                tick_rate = max(0.1, tick_rate - 0.1)
+                board.tick()
+            case 32: # space
                 board.length += 1
                 board.tick()
             case _:
@@ -203,10 +211,18 @@ def play(stdscr: curses.window, width:int, height:int, tick_rate:float):
         if key is not curses.ERR:
             last_key = key
 
-        stdscr.erase()
-        stdscr.addstr(str(board))
-        stdscr.addstr(f"score: {board.length}\n")
-        stdscr.addstr(f"button pressed: {chr(last_key or 1)}")
-        stdscr.refresh()
+        window.erase()
+        stats.erase()
+        stats.border()
+        lines = str(board).split("\n")
+        for i, l in enumerate(lines):
+            window.addstr(1+i, 1, l)
+        window.border()
+        window.refresh()
+        stats.addnstr
+        stats.addstr(1,1,f"score: {board.length}")
+        stats.addstr(2, 1, f"button pressed: {chr(last_key or 1)}")
+        stats.addstr(3, 1, f"current tick-rate: {tick_rate:.2f}s")
+        stats.refresh()
 
         sleep(tick_rate)
