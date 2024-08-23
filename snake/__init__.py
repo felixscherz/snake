@@ -1,10 +1,8 @@
 from __future__ import annotations
 
-import argparse
 import curses
 import logging
 import random
-from curses import wrapper
 from enum import Enum
 from enum import auto
 from io import StringIO
@@ -14,6 +12,8 @@ from typing import Optional
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 logger.addHandler(logging.StreamHandler())
+
+FOODS = "🍇🍈🍉🍊🍋🍎🍏🍐🍑🍒"
 
 
 class GameLost(Exception): ...
@@ -82,7 +82,12 @@ class Empty(Cell):
         return self
 
 
-class Food(Cell): ...
+class Food(Cell):
+    def __init__(self) -> None:
+        self.image = random.choice(FOODS)
+
+    def __str__(self):
+        return self.image
 
 
 class Board:
@@ -154,19 +159,19 @@ class Board:
                     case Empty():
                         out.write(" ")
                     case Food():
-                        out.write("x")
+                        out.write(str(col))
                     case Segment():
-                        out.write("o")
+                        out.write("□")
                     case Head():
                         match col.direction:
                             case Direction.UP:
-                                out.write("^")
+                                out.write("△")
                             case Direction.DOWN:
-                                out.write("v")
+                                out.write("▽")
                             case Direction.RIGHT:
-                                out.write(">")
+                                out.write("▷")
                             case Direction.LEFT:
-                                out.write("<")
+                                out.write("◁")
 
             out.write("\n")
         return out.getvalue()
@@ -195,14 +200,14 @@ def play(stdscr: curses.window, width: int, height: int, tick_rate: float):
                 board.tick(Direction.LEFT)
             case curses.KEY_RIGHT | 108:
                 board.tick(Direction.RIGHT)
-            case 43: # +
+            case 43:  # +
                 tick_rate += 0.1
                 board.tick()
-            case 45: # -
+            case 45:  # -
                 tick_rate -= 0.1
                 tick_rate = max(0.1, tick_rate - 0.1)
                 board.tick()
-            case 32: # space
+            case 32:  # space
                 board.length += 1
                 board.tick()
             case _:
@@ -216,11 +221,11 @@ def play(stdscr: curses.window, width: int, height: int, tick_rate: float):
         stats.border()
         lines = str(board).split("\n")
         for i, l in enumerate(lines):
-            window.addstr(1+i, 1, l)
+            window.addstr(1 + i, 1, l)
         window.border()
         window.refresh()
         stats.addnstr
-        stats.addstr(1,1,f"score: {board.length}")
+        stats.addstr(1, 1, f"score: {board.length}")
         stats.addstr(2, 1, f"button pressed: {chr(last_key or 1)}")
         stats.addstr(3, 1, f"current tick-rate: {tick_rate:.2f}s")
         stats.refresh()
